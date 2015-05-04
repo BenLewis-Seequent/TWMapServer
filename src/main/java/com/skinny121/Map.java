@@ -4,7 +4,6 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 import java.io.File;
-import java.security.PolicySpi;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -103,7 +102,7 @@ public class Map {
         database.close();
     }
 
-    public class Pos{
+    public final class Pos{
         public final int x;
         public final int y;
         public final int z;
@@ -116,6 +115,23 @@ public class Map {
             this.x = x;
             this.y = y;
             this.z = z;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Pos pos = (Pos) o;
+            return pos.x == x && pos.y == y && pos.z ==z;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = x;
+            result = 31 * result + y;
+            result = 31 * result + z;
+            return result;
         }
 
         @Override

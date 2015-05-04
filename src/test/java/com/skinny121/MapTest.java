@@ -1,54 +1,52 @@
 package com.skinny121;
 
-import com.skinny121.nbt.*;
 import org.junit.*;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 public class MapTest {
     private Map map;
+    private Path path;
     @Before
-    public void setUp(){
-        map = new Map("/Users/BenLewis/Desktop/TallWorlds/saves/New World/cubes.dim0.db");
+    public void setUp() throws IOException{
+        path = Files.createTempDirectory(null);
+        map = new Map(path.resolve("test.db").toString());
     }
 
     @After
-    public void tearDown(){
+    public void tearDown() throws IOException{
         map.close();
+        Files.delete(path.resolve("test.db"));
+        Files.delete(path.resolve("test.db.p"));
+        Files.delete(path.resolve("test.db.t"));
+        Files.delete(path);
+    }
+
+
+    @Test
+    public void saveChunkTest(){
+        Assert.assertFalse(map.containsChunk(2, -1, -3));
+        Assert.assertEquals(0, map.getChunks().size());
+        map.saveChunk(2, -1, -3, new byte[]{0, 2});
+        Assert.assertTrue(map.containsChunk(2, -1, -3));
+        Assert.assertEquals(1, map.getChunks().size());
+        Assert.assertEquals(map.new Pos(2, -1, -3), map.getChunks().get(0));
+        Assert.assertArrayEquals(new byte[]{0, 2}, map.getChunk(2, -1, -3));
+        Assert.assertFalse(map.containsChunk(2, -1, 3));
     }
 
     @Test
-    public void chunkTest(){
-        System.out.println(map.getChunks());
-        System.out.println(map.getChunks().size());
-    }
-
-    @Test
-    public void chunkData(){
-        byte[] data = map.getChunk(-7, -4, -6);
-        CompoundTag t = (CompoundTag)Importer.importNBT(new ByteArrayInputStream(data));
-
-        Assert.assertEquals(t.getTag("x"), new IntTag("x", -7));
-        Assert.assertEquals(t.getTag("y"), new IntTag("y", -4));
-        Assert.assertEquals(t.getTag("z"), new IntTag("z", -6));
-
-        System.out.println(NBTToJson.toJson(t, new NBTToJson.Options(true)));
-    }
-
-    @Test
-    public void columnTest(){
-        System.out.println(map.getColumns());
-        System.out.println(map.getColumns().size());
-    }
-
-    @Test
-    public void columnData(){
-        byte[] data = map.getColumn(12, 11);
-        CompoundTag t = (CompoundTag)Importer.importNBT(new ByteArrayInputStream(data));
-
-        Assert.assertEquals(t.getTag("x"), new IntTag("x", 12));
-        Assert.assertEquals(t.getTag("z"), new IntTag("z", 11));
-
-        System.out.println(NBTToJson.toJson(t, new NBTToJson.Options(true)));
+    public void saveColumnTest(){
+        Assert.assertFalse(map.containsColumn(-3, 1));
+        Assert.assertEquals(0, map.getColumns().size());
+        map.saveColumn(-3, 1, new byte[]{0, 2, -1});
+        Assert.assertTrue(map.containsColumn(-3, 1));
+        Assert.assertEquals(1, map.getColumns().size());
+        Assert.assertEquals(map.new Pos(-3, 0,  1), map.getColumns().get(0));
+        Assert.assertArrayEquals(new byte[]{0, 2, -1}, map.getColumn(-3, 1));
+        Assert.assertFalse(map.containsColumn(-3, 5));
     }
 }
