@@ -26,7 +26,7 @@ public class MapServer {
             public void run() {
                 while(!closeRequested) {
                     try (Socket socket = server.accept()) {
-                        connections.add(new Connection(socket, map));
+                        connections.add(new Connection(socket, map).run());
                     } catch (SocketTimeoutException e) {
                     } catch (IOException e) {
                         logger.severe(e.toString());
