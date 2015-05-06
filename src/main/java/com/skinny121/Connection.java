@@ -1,5 +1,7 @@
 package com.skinny121;
 
+import com.google.common.base.Throwables;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -61,15 +63,16 @@ public class Connection {
                    readPacket(inputStream, outputStream);
                 }
             } catch (IOException e) {
-                logger.severe(e.toString());
+                logger.severe(Throwables.getStackTraceAsString(e));
             } finally {
                 try {
                     socket.getOutputStream().write(new byte[]{0});
                 } catch (IOException e) {}
                 try {
+                    logger.info("Closing Socket");
                     socket.close();
                 } catch (IOException e) {
-                    logger.severe(e.toString());
+                    logger.severe(Throwables.getStackTraceAsString(e));
                 }
             }
         });
@@ -82,11 +85,11 @@ public class Connection {
     private void readPacket(DataInputStream in, DataOutputStream out)
             throws IOException{
         byte tag = in.readByte();
-        if((tag & REQUEST_MASK) == 0){
+        if((tag & REQUEST_MASK) == 0) {
             boolean chunk = (tag & CHUNK_MASK) == 0;
             // packet id
             int id = (tag & ID_MASK) >> 1;
-            switch (id){
+            switch (id) {
                 case 0:
                     logger.info("Close Requested");
                     closeRequested = true;
@@ -102,7 +105,7 @@ public class Connection {
                     break;
             }
         }else{
-            logger.severe("Received an reply packet");
+            logger.severe("Received an reply packet "+tag);
             closeRequested = true;
         }
     }
@@ -115,11 +118,13 @@ public class Connection {
         boolean result;
         if(chunk){
             int z = in.readInt();
+            logger.info("Received packet contains("+x+", "+yz+", "+z+")");
             result = map.containsChunk(x, yz, z);
         }else{
+            logger.info("Received packet contains("+x+", "+yz+")");
             result = map.containsColumn(x, yz);
         }
-        out.writeByte(0x12 | (chunk ? 0x8 : 0) | (result ? 0x1 : 0));
+        out.writeByte(0x12 | (!chunk ? 0x8 : 0) | (result ? 0x1 : 0));
     }
 
     private void getPacket(boolean chunk, DataInputStream in, DataOutputStream out)
@@ -130,18 +135,23 @@ public class Connection {
         byte[] data=null;
         if(chunk){
             int z = in.readInt();
+            logger.info("Received packet get("+x+", "+yz+", "+z+")");
             if(map.containsChunk(x, yz, z)){
                 data = map.getChunk(x, yz, z);
             }
         }else if(map.containsColumn(x, yz)){
+            logger.info("Received packet get("+x+", "+yz+")");
             data = map.getColumn(x, yz);
+        }else{
+            logger.info("Received packet get("+x+", "+yz+")");
         }
-        out.writeByte(0x14 | (chunk ? 0x8 : 0) | (data!=null ? 0x1 : 0));
+        out.writeByte(0x14 | (!chunk ? 0x8 : 0) | (data!=null ? 0x1 : 0));
         if(data != null) {
             // write out array
             out.writeInt(data.length);
             out.write(data);
         }
+        logger.info("Sending " + (data == null ? 0:data.length) + " bytes");
     }
 
     private void savePacket(boolean chunk, DataInputStream in, DataOutputStream out)

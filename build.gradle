@@ -1,8 +1,23 @@
+//plugins {
+//    id 'java'
+//    id 'application'
+//    id 'com.github.johnrengelman.shadow' version '1.2.1'
+//}
+
+buildscript {
+    repositories { jcenter() }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.1'
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
+
 version = '1.0'
 
-mainClassName = 'com.skinny121.DBTest'
+mainClassName = 'com.skinny121.TWMapServerMain'
 
 repositories {
     mavenCentral()
@@ -10,6 +25,7 @@ repositories {
 
 dependencies {
     compile 'org.mapdb:mapdb:1.0.7'
+    compile 'com.google.guava:guava:18.0'
     testCompile files('lib/nbt.jar')
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }

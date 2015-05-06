@@ -12,7 +12,7 @@ public class RealMapTest {
     private Map map;
     @Before
     public void setUp(){
-        map = new Map("/Users/BenLewis/Desktop/TallWorlds/saves/New World/cubes.dim0.db");
+        map = new Map("../test_save/cubes.dim0.db");
     }
 
     @After

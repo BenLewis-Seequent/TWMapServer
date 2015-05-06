@@ -1,5 +1,7 @@
 package com.skinny121;
 
+import com.google.common.base.Throwables;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -25,11 +27,12 @@ public class MapServer {
             @Override
             public void run() {
                 while(!closeRequested) {
-                    try (Socket socket = server.accept()) {
+                    try {
+                        Socket socket = server.accept();
                         connections.add(new Connection(socket, map).run());
                     } catch (SocketTimeoutException e) {
                     } catch (IOException e) {
-                        logger.severe(e.toString());
+                        logger.severe(Throwables.getStackTraceAsString(e));
                     }
                 }
                 for(Connection connection:connections){
@@ -46,12 +49,13 @@ public class MapServer {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            logger.severe(e.toString());
+            logger.severe(Throwables.getStackTraceAsString(e));
         }
         try {
+            logger.info("Closing server");
             server.close();
         } catch (IOException e) {
-            logger.severe(e.toString());
+            logger.severe(Throwables.getStackTraceAsString(e));
         }
     }
 
