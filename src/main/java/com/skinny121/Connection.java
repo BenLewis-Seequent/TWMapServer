@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.List;
 import java.util.logging.Logger;
 
 
@@ -15,8 +16,8 @@ import java.util.logging.Logger;
  *   bits
  *   -request 0/reply 1
  *   -indicates chunk 0/column 1
- *   -2 bits for id
  *   -result bit false 0/true 1
+ *   -4 bits for id
  *
  *   Packet id
  *
@@ -34,13 +35,18 @@ import java.util.logging.Logger;
  *      or false indicating not present
  *   save     3
  *      followed by a array of bytes
+ *
+ *   list     4
+ *
+ *      replies with array of two/three values
  */
 public class Connection {
     private static final Logger logger = Logger.getLogger("TWMapServer");
 
-    private static final int REQUEST_MASK = 0x10;
-    private static final int CHUNK_MASK = 0x8;
-    private static final int ID_MASK = 0x6;
+    private static final int REQUEST_MASK = 0x40;
+    private static final int CHUNK_MASK = 0x20;
+    private static final int RESULT_MASK = 0x10;
+    private static final int ID_MASK = 0xF;
 
     private static int counter = 1;
     private final Socket socket;
@@ -88,7 +94,7 @@ public class Connection {
         if((tag & REQUEST_MASK) == 0) {
             boolean chunk = (tag & CHUNK_MASK) == 0;
             // packet id
-            int id = (tag & ID_MASK) >> 1;
+            int id = tag & ID_MASK;
             switch (id) {
                 case 0:
                     logger.info("Close Requested");
@@ -102,6 +108,9 @@ public class Connection {
                     break;
                 case 3:   //save
                     savePacket(chunk, in, out);
+                    break;
+                case 4:   //list
+                    listPacket(chunk, in, out);
                     break;
             }
         }else{
@@ -124,7 +133,7 @@ public class Connection {
             logger.info("Received packet contains("+x+", "+yz+")");
             result = map.containsColumn(x, yz);
         }
-        out.writeByte(0x12 | (!chunk ? 0x8 : 0) | (result ? 0x1 : 0));
+        out.writeByte(0x41 | (!chunk ? CHUNK_MASK : 0) | (result ? RESULT_MASK : 0));
     }
 
     private void getPacket(boolean chunk, DataInputStream in, DataOutputStream out)
@@ -145,7 +154,7 @@ public class Connection {
         }else{
             logger.info("Received packet get("+x+", "+yz+")");
         }
-        out.writeByte(0x14 | (!chunk ? 0x8 : 0) | (data!=null ? 0x1 : 0));
+        out.writeByte(0x42 | (!chunk ? CHUNK_MASK : 0) | (data!=null ? RESULT_MASK : 0));
         if(data != null) {
             // write out array
             out.writeInt(data.length);
@@ -172,6 +181,35 @@ public class Connection {
             map.saveChunk(x, yz, z, data);
         }else {
             map.saveColumn(x, yz, data);
+        }
+    }
+
+    private void listPacket(boolean chunk, DataInputStream in, DataOutputStream out)
+            throws IOException{
+        int len;
+        int[] result;
+        if(chunk){
+            List<Map.Pos> chunks = map.getChunks();
+            len = chunks.size();
+            result = new int[3*len];
+            for(int i=0;i<len;i++){
+                result[3*i  ] = chunks.get(i).x;
+                result[3*i+1] = chunks.get(i).y;
+                result[3*i+2] = chunks.get(i).z;
+            }
+        }else{
+            List<Map.Pos> columns = map.getColumns();
+            len = columns.size();
+            result = new int[2*len];
+            for(int i=0;i<len;i++){
+                result[2*i  ] = columns.get(i).x;
+                result[2*i+1] = columns.get(i).z;
+            }
+        }
+        out.writeByte(0x54 | (!chunk ? CHUNK_MASK : 0));
+        out.writeInt(len);
+        for(int i:result){
+            out.writeInt(i);
         }
     }
 
