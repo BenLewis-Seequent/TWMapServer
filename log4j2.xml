@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_ERR">
+            <PatternLayout pattern="[%level] %d %c %m"/>
+        </Console>
+        <File name="File" fileName="server.log">
+            <PatternLayout pattern="[%level] %d %c %m"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Logger name="fileLogger" level="info">
+            <AppenderRef ref="File"/>
+        </Logger>
+        <Root level="warn">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
