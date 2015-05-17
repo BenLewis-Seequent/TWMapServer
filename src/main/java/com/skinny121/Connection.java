@@ -25,13 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.skinny121;
 
 import com.google.common.base.Throwables;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.List;
-import java.util.logging.Logger;
 
 
 /**
@@ -65,7 +66,7 @@ import java.util.logging.Logger;
  *      replies with array of two/three values
  */
 public class Connection {
-    private static final Logger logger = Logger.getLogger("TWMapServer");
+    private static final Logger logger = LogManager.getLogger();
 
     private static final int REQUEST_MASK = 0x40;
     private static final int CHUNK_MASK = 0x20;
@@ -93,7 +94,7 @@ public class Connection {
                    readPacket(inputStream, outputStream);
                 }
             } catch (IOException e) {
-                logger.severe(Throwables.getStackTraceAsString(e));
+                logger.error(Throwables.getStackTraceAsString(e));
             } finally {
                 try {
                     socket.getOutputStream().write(new byte[]{0});
@@ -102,7 +103,7 @@ public class Connection {
                     logger.info("Closing Socket");
                     socket.close();
                 } catch (IOException e) {
-                    logger.severe(Throwables.getStackTraceAsString(e));
+                    logger.error(Throwables.getStackTraceAsString(e));
                 }
             }
         });
@@ -138,7 +139,7 @@ public class Connection {
                     break;
             }
         }else{
-            logger.severe("Received an reply packet "+tag);
+            logger.error("Received an reply packet "+tag);
             closeRequested = true;
         }
     }

@@ -24,15 +24,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package com.skinny121;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.Scanner;
-import java.util.logging.Logger;
 
 public class TWMapServerMain {
-    private static final Logger logger = Logger.getLogger("TWMapServer");
     public static void main(String[] args) throws Exception{
-        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+        final Logger logger = LogManager.getLogger();
         if(args.length!=2) {
-            logger.severe("Require two arguments one for the file name the other for the port number.");
+            logger.error("Require two arguments one for the file name the other for the port number.");
             return;
         }
         final Map map = new Map(args[0]);

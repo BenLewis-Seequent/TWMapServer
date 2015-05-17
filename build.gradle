@@ -19,6 +19,8 @@ version = '1.0'
 
 mainClassName = 'com.skinny121.TWMapServerMain'
 
+applicationDefaultJvmArgs = ["-Dlog4j.debug"]
+
 repositories {
     mavenCentral()
 }
