@@ -30,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.List;
@@ -64,6 +65,8 @@ import java.util.List;
  *   list     4
  *
  *      replies with array of two/three values
+ *
+ *   commit save 5
  */
 public class Connection {
     private static final Logger logger = LogManager.getLogger();
@@ -90,9 +93,12 @@ public class Connection {
                         new DataInputStream(socket.getInputStream());
                 DataOutputStream outputStream =
                         new DataOutputStream(socket.getOutputStream());
-                while (!closeRequested){
-                   readPacket(inputStream, outputStream);
+                while (!closeRequested) {
+                    readPacket(inputStream, outputStream);
                 }
+            } catch (EOFException e) {
+                // ignore can reasonably happen
+                // this means the connection ended same as closeRequested set to true
             } catch (IOException e) {
                 logger.error(Throwables.getStackTraceAsString(e));
             } finally {
@@ -136,6 +142,9 @@ public class Connection {
                     break;
                 case 4:   //list
                     listPacket(chunk, in, out);
+                    break;
+                case 5:
+                    commitPacket();
                     break;
             }
         }else{
@@ -196,6 +205,9 @@ public class Connection {
         int z = 0;
         if(chunk){
             z = in.readInt();
+            logger.info("save chunk ("+x+", "+yz+", "+z+")");
+        }else{
+            logger.info("save column ("+x+", "+yz+")");
         }
         // read in array
         int len = in.readInt();
@@ -238,6 +250,10 @@ public class Connection {
         for(int i:result){
             out.writeInt(i);
         }
+    }
+
+    private void commitPacket(){
+        map.save();
     }
 
     public void close(){

@@ -129,6 +129,10 @@ public class Map {
         cols.put(getAddress(x, z), data);
     }
 
+    public void save(){
+        database.commit();
+    }
+
     public void close(){
         database.close();
     }
