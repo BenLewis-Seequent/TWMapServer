@@ -26,6 +26,7 @@ package com.skinny121;
 
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -46,10 +47,11 @@ public class Map {
         if(Files.isDirectory(path)){
             path = path.resolve("cubes.dim0.db");
         }
-        database = DBMaker.newFileDB(path.toFile())
+        database = DBMaker.fileDB(path.toFile())
+                .transactionEnable()
                 .closeOnJvmShutdown().make();
-        chunks = database.getTreeMap("chunks");
-        cols = database.getTreeMap("columns");
+        chunks = database.treeMap("chunks", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
+        cols = database.treeMap("columns", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
     }
 
     /*
